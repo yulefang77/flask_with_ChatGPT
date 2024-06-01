@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>台灣製造！台積製造！通通都是力晶製造！</title>
+    <style>
+        body {
+            background-color: #000; /* 黑色背景 */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff; /* 白色文字 */
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #000; /* 黑色背景 */
+            border-radius: 10px;
+            border: 2px solid #fff; /* 白色邊框 */
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+        }
+
+        .chat-header {
+            background-color: #8b0000; /* 深紅色標題背景 */
+            color: #fff;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.5em;
+            border-bottom: 2px solid #ff0000; /* 亮紅色底線 */
+        }
+
+        .chat-history {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: scroll;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(to bottom, #4169e1, #87ceeb); /* 冰藍色漸層背景 */
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+            border: 1px solid #fff; /* 白色邊框 */
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background-color: #000080; /* 深藍色背景 */
+            border-color: #fff; /* 白色邊框 */
+        }
+
+        .assistant-message {
+            align-self: flex-start;
+            background-color: #000; /* 黑色背景 */
+            border-color: #fff; /* 白色邊框 */
+        }
+
+        .chat-input {
+            display: flex;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            background-color: #000; /* 黑色背景 */
+            border: none; /* 移除上方那條線 */
+        }
+
+        .chat-input input {
+            flex-grow: 1;
+            border: 1px solid #fff; /* 白色邊框 */
+            border-radius: 20px;
+            padding: 10px;
+            background-color: #fff; /* 白色背景 */
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+            word-wrap: break-word;
+            box-sizing: border-box;
+        }
+
+        .chat-input button {
+            margin-left: 10px;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            background-color: #8b0000; /* 深紅色背景 */
+            color: #fff;
+            font-weight: bold;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+        }
+
+        .logout-button {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .logout-button form {
+            display: inline;
+        }
+
+        .logout-button button {
+            background-color: #8b0000; /* 深紅色背景 */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">尊貴的{{NICK}}女王鐵王座</div>
+        <div class="chat-history" id="chat-history-container">
+            {% for message in history %}
+            <div class="message user-message">{{ message.get('user') }}</div>
+            <div class="message assistant-message">{{ message.get('assistant') }}</div>
+            {% endfor %}
+        </div>
+        <div class="chat-input">
+            <form class="chat-input" method="post">
+                <input type="text" name="user_input" placeholder="輸入你的訊息..." required>
+                <button type="submit">➤</button>
+            </form>
+        </div>
+        <div class="logout-button">
+            <form action="{{ url_for('logout') }}" method="get">
+                <button type="submit">登出</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const chatHistoryContainer = document.getElementById('chat-history-container');
+            chatHistoryContainer.scrollTop = chatHistoryContainer.scrollHeight;
+
+            // 將輸入欄位設置為焦點
+            document.querySelector('input[name="user_input"]').focus();
+        }
+    </script>
+
+</body>
+</html>

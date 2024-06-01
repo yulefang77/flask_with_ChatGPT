@@ -1,0 +1,5 @@
+# ignore files
+.env
+# ignore folders
+__pycache__
+flask_session

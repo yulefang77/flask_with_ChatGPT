@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>東台灣水男孩解惑專區</title>
+    <style>
+        .chat-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: #f5f5f5;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+        }
+
+        .chat-header {
+            background-color: #25D366;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .chat-history {
+            flex-grow: 1;
+            padding: 10px;
+            overflow-y: scroll;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background-color: #dcf8c6;
+        }
+
+        .assistant-message {
+            align-self: flex-start;
+            background-color: #fff;
+        }
+
+        .chat-input {
+            display: flex;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .chat-input input {
+            flex-grow: 1;
+            border: none;
+            border-radius: 20px;
+            padding: 10px;
+            background-color: #fff;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            word-wrap: break-word;
+            box-sizing: border-box;
+        }
+
+        .chat-input button {
+            margin-left: 10px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            background-color: #25D366;
+            color: #fff;
+            font-weight: bold;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .logout-button {
+            margin-top: 10px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .logout-button form {
+            display: inline;
+        }
+
+        .logout-button button {
+            background-color: #d9534f;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">東台灣水男孩解惑專區</div>
+        <div class="chat-history" id="chat-history-container">
+            {% for message in history %}
+            <div class="message user-message">{{ message.get('user') }}</div>
+            <div class="message assistant-message">{{ message.get('assistant') }}</div>
+            {% endfor %}
+        </div>
+        <div class="chat-input">
+            <form class="chat-input" method="post">
+                <input type="text" name="user_input" placeholder="輸入你的訊息..." required>
+                <button type="submit">➤</button>
+            </form>
+        </div>
+        <div class="logout-button">
+            <form action="{{ url_for('logout') }}" method="get">
+                <button type="submit">登出</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const chatHistoryContainer = document.getElementById('chat-history-container');
+            chatHistoryContainer.scrollTop = chatHistoryContainer.scrollHeight;
+
+            // 將輸入欄位設置為焦點
+            document.querySelector('input[name="user_input"]').focus();
+        }
+    </script>
+</body>
+</html>

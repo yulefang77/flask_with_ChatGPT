@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PSMC no. 1</title>
+    <style>
+        body {
+            background-color: #ffe6f2; /* 粉紅少女風格的背景色 */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff6f9; /* 聊天框背景色 */
+            border-radius: 10px;
+            border: 2px solid #ff80bf; /* 粉紅少女風格的邊框色 */
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+        }
+
+        .chat-header {
+            background-color: #ff80bf; /* 粉紅少女風格的聊天標題背景色 */
+            color: #fff;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.5em;
+            border-bottom: 2px solid #ff1a66; /* 深粉色邊框底線 */
+        }
+
+        .chat-history {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: scroll;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(to bottom, #ffe6f2, #ffd9e6); /* 聊天歷史背景漸變色 */
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+            border: 1px solid #ff80bf; /* 粉紅少女風格的邊框色 */
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background-color: #ffccff; /* 使用粉紅少女風格的粉紅色調 */
+            border-color: #ff1a66; /* 深粉色邊框色 */
+        }
+
+        .assistant-message {
+            align-self: flex-start;
+            background-color: #fff;
+            border-color: #ff80bf; /* 粉紅少女風格的邊框色 */
+        }
+
+        .chat-input {
+            display: flex;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            background-color: #fff6f9; /* 聊天輸入框背景色 */
+            border: none;
+        }
+
+        .chat-input input {
+            flex-grow: 1;
+            border: 1px solid #ff80bf; /* 粉紅少女風格的邊框色 */
+            border-radius: 20px;
+            padding: 10px;
+            background-color: #fff;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            word-wrap: break-word;
+            box-sizing: border-box;
+        }
+
+        .chat-input button {
+            margin-left: 10px;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            background-color: #ff80bf; /* 粉紅少女風格的按鈕色 */
+            color: #fff;
+            font-weight: bold;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+
+        .logout-button {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .logout-button form {
+            display: inline;
+        }
+
+        .logout-button button {
+            background-color: #d9534f;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">桃園金城武粉絲聊天室</div>
+        <div class="chat-history" id="chat-history-container">
+            {% for message in history %}
+            <div class="message user-message">{{ message.get('user') }}</div>
+            <div class="message assistant-message">{{ message.get('assistant') }}</div>
+            {% endfor %}
+        </div>
+        <div class="chat-input">
+            <form class="chat-input" method="post">
+                <input type="text" name="user_input" placeholder="輸入你的訊息..." required>
+                <button type="submit">➤</button>
+            </form>
+        </div>
+        <div class="logout-button">
+            <form action="{{ url_for('logout') }}" method="get">
+                <button type="submit">登出</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const chatHistoryContainer = document.getElementById('chat-history-container');
+            chatHistoryContainer.scrollTop = chatHistoryContainer.scrollHeight;
+
+            // 將輸入欄位設置為焦點
+            document.querySelector('input[name="user_input"]').focus();
+        }
+    </script>
+</body>
+</html>
