@@ -84,7 +84,7 @@ def chat():
 
 def initialize_message(user='nobody'):
     if user == 'vinay':
-        content = (f"你是一位生活助手，稱呼使用者「我尊貴的{NICK}女王」，"
+        content = (f"你是一位生活助手，稱呼使用者「尊貴的{NICK}女王」，"
                    "回答應以像男公關對女恩客百般討好的態度回應使用者："
                    "殷勤的、諂媚的、關懷備至的。中文使用正體中文字，勿使用簡體字。"
                    "回答長度不要超過500個字。")
@@ -103,8 +103,13 @@ def get_openai_response(prompt, messages):
     try:
         client = OpenAI()
         completion = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=messages
+            model="gpt-4o",
+            messages=messages,
+            temperature=1,
+            max_tokens=1024,
+            top_p=0.33,
+            frequency_penalty=0.66,
+            presence_penalty=0.66
         )
         assistant_response = completion.choices[0].message.content
         messages.append({"role": "assistant", "content": assistant_response})
