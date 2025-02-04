@@ -2,136 +2,746 @@
 <html>
 <head>
     <title>東台灣水男孩解惑專區</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        .chat-container {
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto;
-            background-color: #f5f5f5;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            height: 90vh;
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #000000;
+            color: #ffffff;
         }
 
-        .chat-header {
-            background-color: #25D366;
-            color: #fff;
-            padding: 10px;
-            text-align: center;
-            font-weight: bold;
+        .chat-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #000000;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            position: relative;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         .chat-history {
             flex-grow: 1;
-            padding: 10px;
-            overflow-y: scroll;
+            padding: 20px;
+            padding-bottom: 100px; /* 為懸浮輸入框留出空間 */
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .message {
+            max-width: 100%;
+            padding: 0;
+            margin-bottom: 0;
+            line-height: 1.5;
+            color: #ffffff;
+        }
+
+        .user-message {
+            align-self: stretch;
+            background-color: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 20px;
+        }
+
+        .assistant-message {
+            align-self: stretch;
+            background-color: #0a0a0a;
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        /* 修改輸入框容器樣式 */
+        .chat-input {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40%;
+            max-width: 800px;
+            padding: 0;
+            z-index: 1000;
+        }
+
+        .chat-input form {
+            background-color: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 12px 20px;
+            position: relative;
+            min-height: 36px;  /* 改為 36px */
             display: flex;
             flex-direction: column;
         }
 
-        .message {
-            max-width: 80%;
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            word-wrap: break-word;
-        }
-
-        .user-message {
-            align-self: flex-end;
-            background-color: #dcf8c6;
-        }
-
-        .assistant-message {
-            align-self: flex-start;
-            background-color: #fff;
-        }
-
-        .chat-input {
-            display: flex;
+        /* 修改文本輸入框樣式 */
+        .chat-input textarea {
             width: 100%;
-            box-sizing: border-box;
-        }
-
-        .chat-input input {
-            flex-grow: 1;
             border: none;
-            border-radius: 20px;
-            padding: 10px;
-            background-color: #fff;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            background-color: transparent;
+            color: #ffffff;
+            font-size: 16px;
+            resize: none;
+            min-height: 24px;
+            max-height: calc(200px - 24px);  /* 調整為減去 24px */
+            line-height: 24px;
+            padding: 0 40px 0 20px;
+            margin: 0 0 24px 0;  /* 改為 24px */
+            outline: none;
+            overflow-y: auto;
+            overflow-x: hidden;
+            box-sizing: border-box;
+            display: block;
             word-wrap: break-word;
-            box-sizing: border-box;
+            white-space: pre-wrap;
         }
 
-        .chat-input button {
-            margin-left: 10px;
-            margin-right: 10px;
+        /* 修改全局滾動條樣式 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* 修改模型選擇按鈕位置 */
+        .model-selector {
+            position: absolute;
+            left: 20px;
+            bottom: 12px;
+            z-index: 2;
+            background-color: #1a1a1a;
+            padding: 0 10px;
+        }
+
+        .model-button {
+            background-color: transparent;
             border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            background-color: #25D366;
-            color: #fff;
-            font-weight: bold;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .logout-button {
-            margin-top: 10px;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-
-        .logout-button form {
-            display: inline;
-        }
-
-        .logout-button button {
-            background-color: #d9534f;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
+            color: #666666;
+            font-size: 15px;
             cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            padding: 0;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .model-button:hover {
+            color: #ffffff;
+        }
+
+        /* 修改下拉選單樣式 */
+        .model-dropdown {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            background-color: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 6px;
+            margin-bottom: 8px;
+            min-width: 120px;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 添加這個樣式來控制下拉選單的顯示 */
+        .model-dropdown.show {
+            display: block;
+        }
+
+        .model-option {
+            padding: 8px 12px;
+            color: #666666;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-size: 15px;
+        }
+
+        .model-option:hover {
+            background-color: #2a2a2a;
+            color: #ffffff;
+        }
+
+        .model-option.selected {
+            background-color: #2a2a2a;
+            color: #ffffff;
+        }
+
+        /* 修改發送按鈕位置 */
+        .chat-input button[type="submit"] {
+            position: absolute;
+            right: 20px;
+            bottom: 12px;
+            background-color: #1a1a1a;
+            border: none;
+            color: #666666;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0 0 0 10px;
+            transition: color 0.2s;
+            z-index: 2;
+        }
+
+        .chat-input button[type="submit"]:hover {
+            color: #ffffff;
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                padding: 10px;
+            }
+            
+            .chat-input {
+                width: 90%;
+            }
+            
+            .message {
+                font-size: 14px;
+            }
+            
+            .user-message {
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .chat-input {
+                width: 95%;
+            }
+        }
+
+        /* 修改程式碼區塊相關樣式 */
+        .message.assistant-message pre {
+            position: relative;
+            padding: 2.5em 1em 1em;  /* 增加上方內邊距給複製按鈕 */
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            margin: 1em 0;
+        }
+
+        /* 修改複製按鈕樣式 */
+        .copy-button {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 4px 8px;
+            background-color: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            border-radius: 4px;
+            color: #666666;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            opacity: 0;
+            z-index: 1;
+        }
+
+        /* 滑鼠懸停時顯示按鈕 */
+        .message.assistant-message pre:hover .copy-button {
+            opacity: 1;
+        }
+
+        /* 按鈕懸停效果 */
+        .copy-button:hover {
+            background-color: #3a3a3a;
+            color: #ffffff;
+        }
+
+        /* 複製成功後的樣式 */
+        .copy-button.copied {
+            background-color: #2563eb;
+            border-color: #2563eb;
+            color: #ffffff;
+        }
+
+        /* 添加登出按鈕樣式 */
+        .logout-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: transparent;
+            border: 1px solid #666666;
+            color: #666666;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 1000;
+        }
+
+        .logout-button:hover {
+            color: #ffffff;
+            border-color: #ffffff;
+        }
+
+        /* 添加模型名稱和描述樣式 */
+        .model-name {
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .model-description {
+            font-size: 12px;
+            color: #666666;
+        }
+
+        /* 添加載入動畫樣式 */
+        .loading-dots {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .loading-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #666666;
+            animation: dot-pulse 1.5s infinite;
+            opacity: 0.3;
+        }
+
+        .loading-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .loading-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes dot-pulse {
+            0%, 100% {
+                opacity: 0.3;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* 添加載入中的訊息樣式 */
+        .message.assistant-message.loading {
+            background-color: #1a1a1a;
+            min-height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 12px 20px;
+        }
+
+        /* 添加發送按鈕載入狀態 */
+        .chat-input button[type="submit"].loading {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 添加錯誤訊息樣式 */
+        .message.error-message {
+            background-color: rgba(220, 38, 38, 0.1);
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            color: #ef4444;
         }
     </style>
 </head>
 <body>
+    <!-- 添加登出按鈕 -->
+    <button class="logout-button" onclick="window.location.href='/logout'">登出</button>
+    
     <div class="chat-container">
-        <div class="chat-header">東台灣水男孩解惑專區</div>
         <div class="chat-history" id="chat-history-container">
             {% for message in history %}
             <div class="message user-message">{{ message.get('user') }}</div>
-            <div class="message assistant-message">{{ message.get('assistant') }}</div>
+            <div class="message assistant-message" id="assistant-message-{{ loop.index }}">
+                {{ message.get('assistant')|safe }}
+            </div>
             {% endfor %}
         </div>
         <div class="chat-input">
-            <form class="chat-input" method="post">
-                <input type="text" name="user_input" placeholder="輸入你的訊息..." required>
+            <form method="post">
+                <textarea name="user_input" placeholder="請輸入您的問題..." required></textarea>
+                <div class="model-selector">
+                    <button type="button" class="model-button" onclick="toggleModelDropdown()">
+                        <span id="current-model">{{ current_model }}</span>
+                        <span>▼</span>
+                    </button>
+                    <div class="model-dropdown" id="modelDropdown">
+                        <div class="model-option {% if current_model == 'GPT-4o' %}selected{% endif %}" 
+                             onclick="selectModel('GPT-4o')">GPT-4o</div>
+                        <div class="model-option {% if current_model == 'GPT-4o mini' %}selected{% endif %}" 
+                             onclick="selectModel('GPT-4o mini')">GPT-4o mini</div>
+                        <div class="model-option {% if current_model == 'o3-mini' %}selected{% endif %}" 
+                             onclick="selectModel('o3-mini')">o3-mini</div>
+                    </div>
+                </div>
+                <input type="hidden" name="model" id="model-input" value="{{ current_model }}">
                 <button type="submit">➤</button>
-            </form>
-        </div>
-        <div class="logout-button">
-            <form action="{{ url_for('logout') }}" method="get">
-                <button type="submit">登出</button>
             </form>
         </div>
     </div>
 
     <script>
+        // 自動滾動到底部的函數
+        function scrollToBottom() {
+            const chatHistory = document.querySelector('.chat-history');
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
         window.onload = function() {
             const chatHistoryContainer = document.getElementById('chat-history-container');
-            chatHistoryContainer.scrollTop = chatHistoryContainer.scrollHeight;
+            
+            // 設定 marked.js 選項
+            marked.setOptions({
+                breaks: true,        // 支援換行
+                gfm: true,          // 支援 GitHub Flavored Markdown
+                sanitize: false,     // 允許 HTML
+                highlight: function(code, lang) {  // 程式碼高亮
+                    return code;
+                }
+            });
+
+            // 修改滾動到底部的函數
+            function scrollToBottom() {
+                const lastMessage = chatHistoryContainer.querySelector('.message:last-child');
+                if (lastMessage) {
+                    lastMessage.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                }
+            }
+
+            // 在每次新增訊息後執行滾動
+            document.querySelectorAll('.assistant-message').forEach(element => {
+                try {
+                    const originalText = element.innerHTML.trim();
+                    const decodedText = originalText
+                        .replace(/&lt;/g, '<')
+                        .replace(/&gt;/g, '>')
+                        .replace(/&quot;/g, '"')
+                        .replace(/&#39;/g, "'")
+                        .replace(/&amp;/g, '&');
+                    
+                    const parsedContent = marked.parse(decodedText);
+                    element.innerHTML = parsedContent;
+                    
+                    // 為所有程式碼區塊添加複製按鈕
+                    addCopyButtons();
+                    
+                    // 直接執行滾動
+                    scrollToBottom();
+                } catch (error) {
+                    console.log('Markdown 解析錯誤，顯示原始文本');
+                    element.textContent = originalText;
+                }
+            });
+
+            // 監聽新訊息的加入
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.addedNodes.length) {
+                        scrollToBottom();
+                    }
+                });
+            });
+
+            // 配置監聽器
+            observer.observe(chatHistoryContainer, {
+                childList: true,
+                subtree: true
+            });
 
             // 將輸入欄位設置為焦點
-            document.querySelector('input[name="user_input"]').focus();
+            document.querySelector('textarea[name="user_input"]').focus();
+
+            const textarea = document.querySelector('textarea[name="user_input"]');
+            
+            // 使用防抖函數優化文字輸入
+            function debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+
+            // 優化自動調整高度
+            const adjustTextareaHeight = debounce((textarea) => {
+                textarea.style.height = 'auto';
+                textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+            }, 16);
+
+            // 監聽輸入事件
+            textarea.addEventListener('input', function() {
+                adjustTextareaHeight(this);
+            });
+
+            // 監聽按鍵事件
+            textarea.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.form.submit();
+                } else if (e.key === 'Enter' && e.shiftKey) {
+                    // Shift + Enter 允許換行
+                    adjustTextareaHeight(this);
+                }
+            });
+
+            // 初始化高度
+            adjustTextareaHeight(textarea);
+
+            // 頁面加載時滾動到底部
+            scrollToBottom();
+
+            // 處理表單提交
+            const form = document.querySelector('.chat-input form');
+            
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const submitButton = this.querySelector('button[type="submit"]');
+                const chatHistory = document.querySelector('.chat-history');
+                
+                // 1. 先顯示用戶訊息
+                const userDiv = document.createElement('div');
+                userDiv.className = 'message user-message';
+                userDiv.textContent = formData.get('user_input');
+                chatHistory.appendChild(userDiv);
+                
+                // 2. 顯示載入動畫
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'message assistant-message loading';
+                loadingDiv.innerHTML = `
+                    <div class="loading-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                `;
+                chatHistory.appendChild(loadingDiv);
+                
+                submitButton.disabled = true;
+                
+                fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('網路回應不正常');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    // 移除載入動畫
+                    loadingDiv.remove();
+                    
+                    // 創建新的回覆元素
+                    const assistantDiv = document.createElement('div');
+                    assistantDiv.className = 'message assistant-message';
+                    assistantDiv.innerHTML = marked.parse(data.response);
+                    chatHistory.appendChild(assistantDiv);
+                    
+                    // 立即為新增的回覆添加複製按鈕
+                    addCopyButtons();
+                    
+                    // 清空輸入框並調整高度
+                    textarea.value = '';
+                    adjustTextareaHeight(textarea);
+                    
+                    // 確保渲染後再滾動
+                    requestAnimationFrame(() => {
+                        scrollToBottom();
+                    });
+                })
+                .catch(error => {
+                    // 顯示錯誤訊息給用戶
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'message error-message';
+                    errorDiv.textContent = `錯誤：${error.message}`;
+                    chatHistory.appendChild(errorDiv);
+                })
+                .finally(() => {
+                    submitButton.disabled = false;
+                });
+            });
         }
+
+        // 為所有程式碼區塊添加複製按鈕
+        function addCopyButtons() {
+            document.querySelectorAll('.assistant-message pre').forEach(pre => {
+                // 檢查是否已經有複製按鈕
+                if (pre.querySelector('.copy-button')) return;
+
+                // 創建複製按鈕
+                const button = document.createElement('button');
+                button.className = 'copy-button';
+                button.textContent = '複製';
+                
+                // 確保按鈕在程式碼區塊的最前面
+                pre.insertBefore(button, pre.firstChild);
+                
+                button.addEventListener('click', async () => {
+                    // 獲取程式碼內容（排除複製按鈕的文字）
+                    const code = pre.querySelector('code')?.textContent || 
+                                pre.textContent.replace('複製', '').trim();
+                    
+                    try {
+                        await navigator.clipboard.writeText(code);
+                        button.textContent = '已複製！';
+                        button.classList.add('copied');
+                        
+                        setTimeout(() => {
+                            button.textContent = '複製';
+                            button.classList.remove('copied');
+                        }, 2000);
+                    } catch (err) {
+                        button.textContent = '複製失敗';
+                        console.error('複製失敗:', err);
+                        
+                        setTimeout(() => {
+                            button.textContent = '複製';
+                        }, 2000);
+                    }
+                });
+            });
+        }
+
+        // 添加模型選擇相關功能
+        function toggleModelDropdown() {
+            const dropdown = document.getElementById('modelDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        function selectModel(modelName) {
+            const currentModel = document.getElementById('current-model');
+            const modelInput = document.getElementById('model-input');
+            currentModel.textContent = modelName;
+            modelInput.value = modelName;  // 更新隱藏的輸入欄位
+            
+            // 更新選中狀態
+            const options = document.querySelectorAll('.model-option');
+            options.forEach(option => {
+                if (option.textContent.trim() === modelName) {
+                    option.classList.add('selected');
+                } else {
+                    option.classList.remove('selected');
+                }
+            });
+            
+            // 關閉下拉選單
+            document.getElementById('modelDropdown').classList.remove('show');
+        }
+
+        // 點擊其他地方時關閉下拉選單
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('modelDropdown');
+            const button = event.target.closest('.model-button');
+            
+            if (!button && dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        async function askQuestion() {
+            const question = document.getElementById('question').value;
+            if (!question.trim()) return;
+
+            const chatMessages = document.getElementById('chat-messages');
+            const button = document.querySelector('button');
+            button.disabled = true;
+
+            // 1. 顯示用戶問題
+            const userDiv = document.createElement('div');
+            userDiv.className = 'message user-message';
+            userDiv.textContent = question;
+            chatMessages.appendChild(userDiv);
+
+            // 2. 顯示載入動畫
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message ai-message loading';
+            loadingDiv.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
+            chatMessages.appendChild(loadingDiv);
+
+            // 3. 滾動到用戶訊息
+            userDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            try {
+                // 發送請求到後端
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ question })
+                });
+
+                const data = await response.json();
+
+                // 移除載入動畫
+                loadingDiv.remove();
+
+                // 顯示 AI 回覆
+                const assistantDiv = document.createElement('div');
+                assistantDiv.className = 'message ai-message';
+                assistantDiv.innerHTML = marked.parse(data.answer);
+                chatMessages.appendChild(assistantDiv);
+
+                // 滾動到最新的訊息
+                assistantDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+            } catch (error) {
+                console.error('發生錯誤:', error);
+                loadingDiv.remove();
+            } finally {
+                button.disabled = false;
+                document.getElementById('question').value = '';
+            }
+        }
+
+        // 添加快捷鍵支援
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + Enter 發送
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                const form = document.querySelector('.chat-input form');
+                form.dispatchEvent(new Event('submit'));
+            }
+        });
+
+        // 添加未保存提醒
+        window.onbeforeunload = function() {
+            const textarea = document.querySelector('textarea[name="user_input"]');
+            if (textarea.value.trim()) {
+                return '您有未發送的訊息，確定要離開嗎？';
+            }
+        };
     </script>
 </body>
 </html>
