@@ -1,7 +1,5 @@
 # ignore files
 .env
-requirements.txt
 # ignore folders
 __pycache__
 flask_session
-venv

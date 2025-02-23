@@ -18,25 +18,15 @@ NOBODY_PASSWORD = os.getenv('NOBODY')
 
 # 添加模型配置
 MODEL_CONFIGS = {
-    'GPT-4o': {
-        'model': 'gpt-4o',
-        'messages': [],
-        'response_format': {
-            'type': 'text'
-        },
-        'temperature': 0.7,
-        'max_completion_tokens': 4096
-    },
-    'GPT-4o mini': {
+    'gpt-4o-mini': {
         'model': 'gpt-4o-mini',
         'messages': [],
         'response_format': {
             'type': 'text'
         },
-        'temperature': 0.7,
-        'max_completion_tokens': 4096
+        'temperature': 0.8,
+        'max_completion_tokens': 10240
     },
-
     'o3-mini': {
         'model': 'o3-mini',
         'messages': [],
@@ -49,10 +39,17 @@ MODEL_CONFIGS = {
 
 # 初始化Flask應用
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(32)
-app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_PERMANENT'] = True
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)
+app.secret_key = os.getenv('FLASK_SECRET_KEY', secrets.token_hex(32))
+app.config.update({
+    'SESSION_TYPE': 'filesystem',
+    
+    'SESSION_COOKIE_SECURE': False,
+    'SESSION_COOKIE_HTTPONLY': True,
+    'SESSION_COOKIE_SAMESITE': 'Lax',
+    'SESSION_PERMANENT': True,
+    'PERMANENT_SESSION_LIFETIME': timedelta(hours=8),
+    'SESSION_REFRESH_EACH_REQUEST': False
+})
 Session(app)
 
 def login_required(f):
@@ -112,7 +109,7 @@ def chat():
     if not template:
         return redirect(url_for('login'))
 
-    current_model = session.get('current_model', 'GPT-4o')
+    current_model = session.get('current_model', 'gpt-4o-mini')
 
     if request.method == "POST":
         try:
@@ -164,11 +161,11 @@ def initialize_message(user='nobody'):
         content = ("你是一位生活助手，中文使用正體中文字，勿使用簡體字。")
     return [{"role": "system", "content": content}]
 
-def get_openai_response(prompt, messages, model_name='GPT-4o'):
+def get_openai_response(prompt, messages, model_name='gpt-4o-mini'):
     messages.append({"role": "user", "content": prompt})
     try:
         client = OpenAI()
-        model_config = MODEL_CONFIGS.get(model_name, MODEL_CONFIGS['GPT-4o'])
+        model_config = MODEL_CONFIGS.get(model_name, MODEL_CONFIGS['gpt-4o-mini'])
         
         # 根據不同模型使用不同的配置
         if model_name == 'o3-mini':
@@ -195,4 +192,6 @@ def get_openai_response(prompt, messages, model_name='GPT-4o'):
         return "抱歉，發生錯誤。請稍後再試。", messages
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(
+        debug=True
+    )

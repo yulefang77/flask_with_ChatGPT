@@ -1,153 +1,481 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>台灣製造！台積製造！通通都是力晶製造！</title>
+    <title>美樂女王的鐵王座</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Marked.js for Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>    
     <style>
-        body {
-            background-color: #000; /* 黑色背景 */
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #fff; /* 白色文字 */
-        }
-
-        .chat-container {
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #000; /* 黑色背景 */
-            border-radius: 10px;
-            border: 2px solid #fff; /* 白色邊框 */
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            height: 90vh;
-        }
-
-        .chat-header {
-            background-color: #8b0000; /* 深紅色標題背景 */
-            color: #fff;
-            padding: 15px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 1.5em;
-            border-bottom: 2px solid #ff0000; /* 亮紅色底線 */
-        }
-
+        /* 保留基本功能樣式 */
         .chat-history {
-            flex-grow: 1;
-            padding: 20px;
-            overflow-y: scroll;
+            height: calc(100vh - 220px);
+            overflow-y: auto;
+            overflow-x: hidden;
+            background-color: var(--bs-dark);
+        }
+
+        .loading-dots {
             display: flex;
-            flex-direction: column;
-            background: linear-gradient(to bottom, #4169e1, #87ceeb); /* 冰藍色漸層背景 */
+            gap: 4px;
+            align-items: center;
+            padding: 8px 0;
         }
 
-        .message {
-            max-width: 80%;
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            word-wrap: break-word;
-            border: 1px solid #fff; /* 白色邊框 */
-        }
-
-        .user-message {
-            align-self: flex-end;
-            background-color: #000080; /* 深藍色背景 */
-            border-color: #fff; /* 白色邊框 */
-        }
-
-        .assistant-message {
-            align-self: flex-start;
-            background-color: #000; /* 黑色背景 */
-            border-color: #fff; /* 白色邊框 */
-        }
-
-        .chat-input {
-            display: flex;
-            width: 100%;
-            box-sizing: border-box;
-            padding: 10px;
-            background-color: #000; /* 黑色背景 */
-            border: none; /* 移除上方那條線 */
-        }
-
-        .chat-input input {
-            flex-grow: 1;
-            border: 1px solid #fff; /* 白色邊框 */
-            border-radius: 20px;
-            padding: 10px;
-            background-color: #fff; /* 白色背景 */
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
-            word-wrap: break-word;
-            box-sizing: border-box;
-        }
-
-        .chat-input button {
-            margin-left: 10px;
-            border: none;
+        .loading-dots span {
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            background-color: #8b0000; /* 深紅色背景 */
+            animation: dot-pulse 1.5s infinite;
+        }
+
+        @keyframes dot-pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+        
+        .user-message, .assistant-message {
+            background-color: var(--bs-dark) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            color: #fff !important;
+        }
+        
+        .user-message:hover {
+            border-color: rgba(255, 255, 255, 0.4) !important;
+            transform: translateY(-1px);
+        }
+        
+        /* 基本文字處理 */
+        .message-text {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        /* 基本程式碼區塊樣式 */
+        pre {
+            max-width: 100%;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            background-color: #1e1e1e;
+            padding: 1rem;
+            border-radius: 4px;
+            color: #d4d4d4;
+        }
+
+        code {
+            background-color: #1e1e1e;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+        }
+
+        /* 打字機效果樣式 */
+        .typing-indicator {
+            background-color: var(--bs-dark);
+            padding: 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .typing-indicator::before {
+            content: "AI思考中";
             color: #fff;
-            font-weight: bold;
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
-            cursor: pointer;
+            font-size: 14px;
+            margin-right: 12px;
         }
 
-        .logout-button {
-            margin-bottom: 10px;
-            text-align: center;
+        .typing-indicator span {
+            width: 10px;
+            height: 10px;
+            background-color: #fff;
+            border-radius: 50%;
+            margin: 0 3px;
+            animation: typing 1.5s ease-in-out infinite;
         }
 
-        .logout-button form {
-            display: inline;
+        .typing-indicator span:nth-child(1) { animation-delay: 0s; }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.3s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.6s; }
+
+        @keyframes typing {
+            0%, 100% { 
+                transform: translateY(0px);
+                opacity: 0.3;
+            }
+            50% { 
+                transform: translateY(-10px);
+                opacity: 1;
+            }
         }
 
-        .logout-button button {
-            background-color: #8b0000; /* 深紅色背景 */
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+        /* 霓虹光效版本 */
+        .chat-history::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        /* 材質設計版本 */
+        .chat-history::-webkit-scrollbar-thumb {
+            background-image: linear-gradient(
+                45deg,
+                rgba(255,255,255,0.1) 25%,
+                transparent 25%,
+                transparent 50%,
+                rgba(255,255,255,0.1) 50%,
+                rgba(255,255,255,0.1) 75%,
+                transparent 75%,
+                transparent
+            );
+            background-size: 4px 4px;
+        }
+
+        /* 迷你指示器版本 */
+        .chat-history::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-history::-webkit-scrollbar-thumb {
+            border-radius: 3px;
+        }
+
+        /* 輸入框專用滾動條樣式 */
+        textarea.form-control::-webkit-scrollbar {
+            width: 8px;  /* 垂直滾動條寬度 */
+            height: 8px; /* 水平滾動條高度 */
+        }
+
+        textarea.form-control::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            box-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
+        }
+
+        textarea.form-control::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        /* Firefox 兼容 */
+        textarea.form-control {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.1);
+        }
+
+        /* 輸入框容器同步樣式 */
+        .fixed-bottom .container-md {
+            scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.1);
+            scrollbar-width: thin;
+        }
+
+        /* 移動端隱藏 */
+        @media (hover: none) {
+            textarea.form-control::-webkit-scrollbar {
+                display: none;
+            }
+            textarea.form-control {
+                scrollbar-width: none;
+            }
         }
     </style>
 </head>
-<body>
-    <div class="chat-container">
-        <div class="chat-header">尊貴的{{NICK}}女王鐵王座</div>
+<body class="bg-dark text-light">
+    <!-- 導航欄 -->
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-md">
+            <div class="w-100 d-flex justify-content-between align-items-center">
+                <div class="flex-grow-1 text-center">
+                    <span class="navbar-brand">美樂女王的鐵王座</span>
+                </div>
+                <div>
+                    <a href="/logout" class="btn btn-primary">登出</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要內容區域 -->
+    <div class="container-md my-1">
         <div class="chat-history" id="chat-history-container">
             {% for message in history %}
-            <div class="message user-message">{{ message.get('user') }}</div>
-            <div class="message assistant-message">{{ message.get('assistant') }}</div>
+            <div class="mb-3">
+                <!-- 用戶訊息 -->
+                <div class="row mb-2">
+                    <div class="col">
+                        <div class="user-message p-3 rounded message-text">
+                            {{ message.get('user') }}
+                        </div>
+                    </div>
+                </div>
+                <!-- AI 回應 -->
+                <div class="row">
+                    <div class="col">
+                        <div class="assistant-message p-3 rounded message-text" 
+                             id="assistant-message-{{ loop.index }}">
+                            {{ message.get('assistant')|safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
             {% endfor %}
         </div>
-        <div class="chat-input">
-            <form class="chat-input" method="post">
-                <input type="text" name="user_input" placeholder="輸入你的訊息..." required>
-                <button type="submit">➤</button>
-            </form>
-        </div>
-        <div class="logout-button">
-            <form action="{{ url_for('logout') }}" method="get">
-                <button type="submit">登出</button>
+    </div>
+
+    <!-- 輸入區域 -->
+    <div class="fixed-bottom bg-dark p-3">
+        <div class="container-md">
+            <form method="post">
+                <div class="row g-3">
+                    <div class="col-12 d-flex gap-2 align-items-center">
+                        <div class="flex-grow-1">
+                            <textarea name="user_input" class="form-control bg-dark text-light" 
+                                    rows="2" style="resize: none;"
+                                    placeholder="請輸入您的問題..." required></textarea>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-primary h-100">發送</button>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="dropup">
+                            <button class="btn btn-outline-light dropdown-toggle" type="button" 
+                                    id="modelDropdown" data-bs-toggle="dropdown" 
+                                    aria-expanded="false">
+                                <span id="current-model">{{ current_model }}</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li><a class="dropdown-item {% if current_model == 'gpt-4o-mini' %}active{% endif %}" 
+                                    href="#" onclick="selectModel('gpt-4o-mini')">
+                                    <i class="bi bi-cpu"></i> gpt-4o-mini
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item {% if current_model == 'o3-mini' %}active{% endif %}" 
+                                    href="#" onclick="selectModel('o3-mini')">
+                                    <i class="bi bi-lightning"></i> o3-mini
+                                </a></li>
+                            </ul>
+                        </div>
+                        <input type="hidden" name="model" id="model-input" value="{{ current_model }}">
+                    </div>
+                </div>
             </form>
         </div>
     </div>
 
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
-        window.onload = function() {
-            const chatHistoryContainer = document.getElementById('chat-history-container');
-            chatHistoryContainer.scrollTop = chatHistoryContainer.scrollHeight;
-
-            // 將輸入欄位設置為焦點
-            document.querySelector('input[name="user_input"]').focus();
+        // 保留原有的核心功能 JavaScript
+        function scrollToBottom() {
+            const chatHistory = document.querySelector('.chat-history');
+            if (chatHistory) {
+                chatHistory.scrollTo({
+                    top: chatHistory.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }
         }
-    </script>
 
+        // 基本 Markdown 解析配置
+        marked.setOptions({
+            breaks: true,
+            gfm: true,
+            sanitize: false
+        });
+
+        // 安全字符轉義函式
+        function escapeHtml(unsafe) {
+            return unsafe
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
+
+        // 模型選擇功能
+        function selectModel(modelName) {
+            const currentModel = document.getElementById('current-model');
+            const modelInput = document.getElementById('model-input');
+            currentModel.textContent = modelName;
+            modelInput.value = modelName;
+        }
+
+        // 修改表單提交處理
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitButton = this.querySelector('button[type="submit"]');
+            const chatHistory = document.querySelector('.chat-history');
+            
+            // 創建一個包含用戶訊息的容器
+            const messageContainer = document.createElement('div');
+            messageContainer.className = 'mb-3';
+            
+            // 添加用戶訊息
+            const userRow = document.createElement('div');
+            userRow.className = 'row mb-2';
+            userRow.innerHTML = `
+                <div class="col">
+                    <div class="user-message p-3 rounded message-text">
+                        ${formData.get('user_input')}
+                    </div>
+                </div>
+            `;
+            messageContainer.appendChild(userRow);
+            chatHistory.appendChild(messageContainer);
+            
+            // 添加載入動畫
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'row';
+            loadingDiv.innerHTML = `
+                <div class="col">
+                    <div class="bg-dark text-white p-3 rounded d-flex align-items-center gap-2">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span class="text-primary">AI 思考中...</span>
+                    </div>
+                </div>
+            `;
+            messageContainer.appendChild(loadingDiv);
+            
+            submitButton.disabled = true;
+            
+            // 發送請求
+            fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) throw new Error(data.error);
+                
+                loadingDiv.remove();
+                const aiResponse = data.response || '';
+
+                const assistantRow = document.createElement('div');
+                assistantRow.className = 'row';
+
+                // 使用異步解析並加入加載狀態
+                const parsePromise = marked.parse(aiResponse, { async: true })
+                    .then(parsed => {
+                        assistantRow.innerHTML = `
+                            <div class="col">
+                                <div class="assistant-message p-3 rounded message-text" 
+                                     data-processed="true">
+                                    ${parsed}
+                                </div>
+                            </div>
+                        `;
+                        return parsed;
+                    })
+                    .catch(error => {
+                        console.error('Markdown 解析錯誤:', error);
+                        assistantRow.innerHTML = `
+                            <div class="col">
+                                <div class="assistant-message p-3 rounded message-text">
+                                    ${aiResponse}
+                                </div>
+                            </div>
+                        `;
+                        return aiResponse;
+                    });
+
+                // 等待解析完成後再執行後續操作
+                return parsePromise.then(() => {
+                    messageContainer.appendChild(assistantRow);
+                    addCopyButtons();
+                    this.reset();
+                    scrollToBottom();
+                    setTimeout(scrollToBottom, 100);
+                });
+            })
+            .catch(error => {
+                loadingDiv.innerHTML = `
+                    <div class="col">
+                        <div class="bg-danger text-white p-3 rounded">
+                            錯誤：${escapeHtml(error.message)}
+                        </div>
+                    </div>
+                `;
+                scrollToBottom();  // 錯誤時也滾動到底部
+            })
+            .finally(() => {
+                submitButton.disabled = false;
+                scrollToBottom();  // 最終確保滾動
+            });
+        });
+
+        // 新增複製按鈕功能
+        function addCopyButtons() {
+            document.querySelectorAll('pre').forEach(pre => {
+                // 避免重複添加按鈕
+                if (!pre.querySelector('.copy-btn')) {
+                    const button = document.createElement('button');
+                    button.className = 'copy-btn btn btn-sm btn-dark position-absolute';
+                    button.style.top = '8px';
+                    button.style.right = '8px';
+                    button.innerHTML = '<i class="bi bi-clipboard"></i>';
+                    
+                    button.addEventListener('click', () => {
+                        const code = pre.querySelector('code').innerText;
+                        navigator.clipboard.writeText(code).then(() => {
+                            showCopyFeedback(button, '已複製!');
+                        }).catch(() => {
+                            showCopyFeedback(button, '複製失敗');
+                        });
+                    });
+                    
+                    pre.style.position = 'relative';
+                    pre.appendChild(button);
+                }
+            });
+        }
+
+        // 新增複製反饋提示
+        function showCopyFeedback(button, text) {
+            const feedback = document.createElement('div');
+            feedback.className = 'copy-feedback text-success small position-absolute';
+            feedback.style.top = '-20px';
+            feedback.style.right = '0';
+            feedback.textContent = text;
+            
+            button.parentNode.appendChild(feedback);
+            setTimeout(() => feedback.remove(), 2000);
+        }
+
+        // 修改頁面載入完成後的處理函數
+        window.onload = function() {
+            document.querySelectorAll('.assistant-message').forEach(element => {
+                try {
+                    if (!element.dataset.processed) {
+                        const originalText = element.textContent.trim();
+                        element.innerHTML = marked.parse(originalText);
+                        element.dataset.processed = 'true';
+                    }
+                } catch (error) {
+                    console.error('Markdown 解析錯誤:', error);
+                }
+            });
+            
+            addCopyButtons();
+            scrollToBottom();
+        };
+
+        // 快捷鍵支援
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                document.querySelector('form').dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
 </body>
 </html>
