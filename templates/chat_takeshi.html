@@ -53,6 +53,34 @@
         .message-text {
             word-wrap: break-word;
             overflow-wrap: break-word;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        /* 新增流式輸出的動畫 */
+        @keyframes fadeIn {
+            from { opacity: 0.7; }
+            to { opacity: 1; }
+        }
+
+        .typing-text {
+            display: inline-block;
+            margin-right: 4px;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        /* 打字機功能專用樣式 */
+        .typing-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 18px;
+            background-color: #ffffff;
+            margin-left: 2px;
+            animation: cursor-blink 1s infinite;
+        }
+
+        @keyframes cursor-blink {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
         }
 
         /* 基本程式碼區塊樣式 */
@@ -304,6 +332,110 @@
             modelInput.value = modelName;
         }
 
+        // 新增流式輸出處理函數
+        function handleStreamResponse(messageId) {
+            const chatHistory = document.getElementById('chat-history-container');
+            const messageContainer = chatHistory.querySelector(`.message-container-${messageId}`);
+            const loadingDiv = messageContainer.querySelector('.loading-div');
+            
+            // 添加助手回應的容器
+            const assistantRow = document.createElement('div');
+            assistantRow.className = 'row assistant-row';
+            assistantRow.innerHTML = `
+                <div class="col">
+                    <div class="assistant-message p-3 rounded message-text" id="assistant-message-${messageId}">
+                        <span class="streamed-content"></span><span class="typing-cursor"></span>
+                    </div>
+                </div>
+            `;
+            
+            // 在加載動畫後插入助手回應容器
+            messageContainer.replaceChild(assistantRow, loadingDiv);
+            
+            // 獲取內容容器
+            const contentContainer = assistantRow.querySelector('.streamed-content');
+            let fullText = '';
+            
+            // 使用 EventSource 處理流式回應
+            const eventSource = new EventSource('/stream_response');
+            
+            eventSource.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.error) {
+                        // 處理錯誤情況
+                        contentContainer.parentNode.classList.add('bg-danger');
+                        contentContainer.textContent = `錯誤：${data.error}`;
+                        eventSource.close();
+                        return;
+                    }
+                    
+                    if (data.content) {
+                        fullText += data.content;
+                        // 直接添加內容，不進行解析
+                        contentContainer.textContent = fullText;
+                        scrollToBottom();
+                    }
+                    
+                    if (data.done) {
+                        // 處理完成後，移除光標並解析 markdown
+                        const cursorElement = assistantRow.querySelector('.typing-cursor');
+                        if (cursorElement) cursorElement.remove();
+                        
+                        // 向伺服器發送保存請求
+                        fetch('/save_response', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({
+                                full_response: data.full_response || fullText
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(result => {
+                            if (!result.success) {
+                                console.error('保存回應失敗:', result.error);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('保存請求錯誤:', error);
+                        });
+                        
+                        // 完成時進行 markdown 解析
+                        marked.parse(fullText, { async: true })
+                            .then(parsed => {
+                                const messageElement = document.getElementById(`assistant-message-${messageId}`);
+                                messageElement.innerHTML = parsed;
+                                messageElement.dataset.processed = 'true';
+                                addCopyButtons();
+                                scrollToBottom();
+                            })
+                            .catch(error => {
+                                console.error('Markdown 解析錯誤:', error);
+                            });
+                        
+                        eventSource.close();
+                    }
+                } catch (error) {
+                    console.error('流式解析錯誤:', error);
+                    eventSource.close();
+                }
+            };
+            
+            eventSource.onerror = function(error) {
+                console.error('EventSource 錯誤:', error);
+                contentContainer.parentNode.innerHTML = `
+                    <div class="bg-danger text-white p-3 rounded">
+                        連接錯誤，請重試
+                    </div>
+                `;
+                eventSource.close();
+            };
+        }
+
         // 修改表單提交處理
         document.querySelector('form').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -311,10 +443,14 @@
             const formData = new FormData(this);
             const submitButton = this.querySelector('button[type="submit"]');
             const chatHistory = document.querySelector('.chat-history');
+            const userInput = formData.get('user_input');
+            
+            if (!userInput.trim()) return;
             
             // 創建一個包含用戶訊息的容器
+            const messageId = Date.now();
             const messageContainer = document.createElement('div');
-            messageContainer.className = 'mb-3';
+            messageContainer.className = `mb-3 message-container-${messageId}`;
             
             // 添加用戶訊息
             const userRow = document.createElement('div');
@@ -322,27 +458,27 @@
             userRow.innerHTML = `
                 <div class="col">
                     <div class="user-message p-3 rounded message-text">
-                        ${formData.get('user_input')}
+                        ${escapeHtml(userInput)}
                     </div>
                 </div>
             `;
             messageContainer.appendChild(userRow);
-            chatHistory.appendChild(messageContainer);
             
             // 添加載入動畫
             const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'row';
+            loadingDiv.className = 'row loading-div';
             loadingDiv.innerHTML = `
                 <div class="col">
-                    <div class="bg-dark text-white p-3 rounded d-flex align-items-center gap-2">
-                        <div class="spinner-border spinner-border-sm text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <span class="text-primary">AI 思考中...</span>
+                    <div class="typing-indicator">
+                        <span></span>
+                        <span></span>
+                        <span></span>
                     </div>
                 </div>
             `;
             messageContainer.appendChild(loadingDiv);
+            chatHistory.appendChild(messageContainer);
+            scrollToBottom();
             
             submitButton.disabled = true;
             
@@ -358,45 +494,9 @@
             .then(data => {
                 if (data.error) throw new Error(data.error);
                 
-                loadingDiv.remove();
-                const aiResponse = data.response || '';
-
-                const assistantRow = document.createElement('div');
-                assistantRow.className = 'row';
-
-                // 使用異步解析並加入加載狀態
-                const parsePromise = marked.parse(aiResponse, { async: true })
-                    .then(parsed => {
-                        assistantRow.innerHTML = `
-                            <div class="col">
-                                <div class="assistant-message p-3 rounded message-text" 
-                                     data-processed="true">
-                                    ${parsed}
-                                </div>
-                            </div>
-                        `;
-                        return parsed;
-                    })
-                    .catch(error => {
-                        console.error('Markdown 解析錯誤:', error);
-                        assistantRow.innerHTML = `
-                            <div class="col">
-                                <div class="assistant-message p-3 rounded message-text">
-                                    ${aiResponse}
-                                </div>
-                            </div>
-                        `;
-                        return aiResponse;
-                    });
-
-                // 等待解析完成後再執行後續操作
-                return parsePromise.then(() => {
-                    messageContainer.appendChild(assistantRow);
-                    addCopyButtons();
-                    this.reset();
-                    scrollToBottom();
-                    setTimeout(scrollToBottom, 100);
-                });
+                // 處理流式回應
+                handleStreamResponse(messageId);
+                this.reset();
             })
             .catch(error => {
                 loadingDiv.innerHTML = `
@@ -406,11 +506,10 @@
                         </div>
                     </div>
                 `;
-                scrollToBottom();  // 錯誤時也滾動到底部
+                scrollToBottom();
             })
             .finally(() => {
                 submitButton.disabled = false;
-                scrollToBottom();  // 最終確保滾動
             });
         });
 
